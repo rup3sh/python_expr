@@ -1,0 +1,94 @@
+#!/bin/python3
+
+import pdb
+import sys
+import itertools
+import collections
+from functools import reduce
+from functools import partial
+
+import time
+from time import gmtime, strftime
+import multiprocessing
+
+##Reverses words in a corpus of text.
+
+def main(argv):
+	
+	start_time = time.localtime()
+	local_time_s = strftime("%d-%m-%Y %H:%M:%S", start_time)
+	print("Time Start:{}\n".format(local_time_s))
+	
+	word_list = readWords('./Resources/wlist_match1.txt')
+	print(str(word_list[-10:]))
+	target_word = 'lavendarmandelerbot'
+	#findWordDemo(word_list, target_word)
+	findWordDemoMP(word_list, target_word)
+	end_time = time.localtime()
+	local_time_e = strftime("%d-%m-%Y %H:%M:%S", end_time)
+	print("Time End:{}".format(local_time_e))
+	
+	time_taken = (time.mktime(end_time) - time.mktime(start_time))/60		
+	time_taken_rounded = round(time_taken,3)
+	
+	print("Time Taken:{}\n".format(time_taken_rounded))
+
+def readWords(filepath):
+	
+	words = []
+	
+	try:
+	
+		myFile = open(filepath, 'r')
+		
+		for line in myFile:			
+			words.append(line.strip())
+		
+	except 	Exception as e:
+	
+		sys.stderr.write("Exception:{}".format(str(e)))
+
+	return words
+
+def findWordDemo(word_list, target):
+	
+	count = 1
+	print("Looking for:{} in word list if size {}".format(target,len(word_list)))
+	for word in word_list:
+		if target == word:
+			print("List Index:{}".format(count))
+		count+=1		
+	
+
+## THE LAST ARGUMENT IS AN ITERABLE HERE THAT WORKS WITH 
+def mp_worker(chunksize, word_list, target, i):
+	
+	print ("Processing chunksize {} {}".format(i, i+chunksize))
+	
+	try:	
+		return i + word_list[i:i+chunksize].index(target)
+		
+	except ValueError:
+	
+		return None	
+	
+
+def findWordDemoMP(word_list, target):
+	
+	print("Looking for:{} in word list of size {} using multi-processing".format(target,len(word_list)))
+	
+	chunksize = 500000
+	
+	## Need a function wrapper to wrap additional arguments
+	
+	func = partial(mp_worker,chunksize, word_list, target)
+	
+	pool = multiprocessing.Pool(processes=4)
+	
+	## POOL MAP TAKES FUNCTION (WHICH NEEDS A WRAPPER TO PASS ARGUMENTS) + AN ITERABLE
+	results = pool.map(func, range(0,len(word_list), chunksize))
+	pool.close()
+	
+	print(str(results))
+	
+if __name__ == "__main__":main(sys.argv[0:])

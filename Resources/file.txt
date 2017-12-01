@@ -1,0 +1,301 @@
+this is how we do it!This Is How We Do It Again!
+Exception:name 'r' is not definedcad_env.20170328_sca-lx-08:general:311 > generatorPipeline
+#!/import/freetools/exe/python3
+#===============================================================================================================+
+#                                     R H A E G A L 
+#                         (RCube High-Availability Engine for Graphs and AnaLytics)
+#
+# Original Author       : Rupesh Verma
+#                         
+#
+# Creation Date         : May 2017
+#
+# Description           : 'Rhaegal' is a web service mostly meant for data munging needed by rcube web application.
+#             
+#             It can be run in 2 modes - 
+#
+#             1) Regression Mode - This is useful for development, regression testing and debugging.
+#                                              It runs most of the core application logic without running
+#                                              it thru the web service interface. In essence, it simulates HTTP
+#                          methods. Therefore, the tail application logic is exactly the same
+#                          as the one the actual service would run in production. This one
+#                                              has separate but equivalent command-line options to the URL query
+#                          string key, value pairs.
+#
+#             2) Service Mode - This is the production mode of operation where it runs as a web app.
+#                       The service mode can be run as both HTTP server and HTTPS server.
+#                       By default, it is HTTPS. 
+#                       For running as HTTP,  use --svcmode='regress'
+#                           
+# Code Architecture:
+# ==================
+#                              
+#   'Rhaegal' relies on on 2 major python libs -
+#     1. 'tornado' for web services (using REST API)  
+#         2. 'pandas' for data munging.
+#                           
+#   Each web request(example HTTP GET), goes to tornado's IO loop (like a queue). On a high-level, this queue
+# is blocking. This means if service req. is not finished quickly, it blocks the loop from receiving the next request.
+# (This is actually similar to a GUI's Event Dispatch Thread concept.)
+# Therefore, for good design, GET request has to be handled asynchronously. However, it only works if complete
+# downstream code path can support async functionality. Else a new thread can be started. This immediately returns
+# control back to the main IOLoop. This is what we do here. Therefore, each request is essentially handled by its
+# own thread. (This is quite similar to Apache web server way of things). As you can see, it is less scalable compared
+# to pure async but it may work well under normal loads we are likely to see on our internal network.
+#
+#   For data munging, we first do coarse-grained filtering using SQL,(& filtering out whatever is possible)
+# and then using 'pandas' library do the fine-grained selection and projection of data. It is recommended to go thru
+# a Pandas tutorial from the web if you are unfamiliar with it. 'Pandas' also has useful data analysis functions &
+# support that SQL may not have.
+#
+#   The normal mode of operation has 2 logs -
+#
+#  1. --log_file_prefix is the log file that tornado generates
+#  2. --svclog is the log that the application writes explicitly. This log has a formatter that is designed to make it
+#     easier to do log-data analysis using something like Apache Spark. So if you change formatter keep that in mind.
+#  Also application logs are rotating (to prevent large logs) but tornado logs are not. So we have to think of some
+#  administration to take care of large tornado logs.
+#
+# Helpful Conventions:
+# =====================
+#
+#  1. New service command-line should be prefixed with 'svc'. This is to separate it from tornado/regression CLI 
+#     options.
+#  2. Each service URL 'X' is mapped to its service request handler 'XReqHandler', which uses  
+#     'XJobWorker' thread to delegate actual job to 'X'. Please see any existing service implementation.
+# 
+# Finally, it is recommended to read the Readme file for other details about testing, deployment, administration etc.
+#
+# History               : Initial Version, May 2017 - Rupesh Verma
+#
+#
+# Copyright 2017 Oracle and/or its affiliates.  All rights reserved.
+# Oracle Confidential -- Highly Restricted
+#================================================================================================================+
+from concurrent.futures import ThreadPoolExecutor
+import logging
+import os
+import sys
+import threading
+import time
+from time import gmtime, strftime, sleep
+import tornado.httpserver
+import tornado.ioloop
+import tornado.web
+from tornado.options import define, options
+from tornado.log import enable_pretty_logging
+
+from RhaegalLib import AtomicCounter
+from RhaegalLib import DesignDataSummaryReqHandler
+from RhaegalLib.Services.AllKeysDataSummary import AllKeysDataSummaryReqHandler
+from RhaegalLib import ServicePlotsReqHandler
+from RhaegalLib import StopReqHandler
+from RhaegalLib import PingReqHandler
+from RhaegalLib.Services.ETAChart import ETAChartReqHandler
+from RhaegalLib.Services.EtaUpdate import EtaUpdateReqHandler
+
+from RhaegalUnitTestLib import ServicePlotsReqHandlerUT
+from RhaegalUnitTestLib import ETAChartReqHandlerUT
+from RhaegalUnitTestLib import DesignDataSummaryReqHandlerUT
+from RhaegalUnitTestLib import AllKeysDataSummaryReqHandlerUT
+from RhaegalUnitTestLib import EtaUpdateReqHandlerUT
+
+## ======== PRODUCTION (SERVICE) MODE OPTIONS ====================================================================
+
+define("svcport",          default=8000, 							help="run on the given port", type=int)
+define("svcconfig",        default="/import/pdtools/etc/rcube/config/rcubesync.central.ini",    help="Main Rcube config file")
+define("svclog",       	   default='./default_service.log', 					help="Service log")
+define("svcinst",          default=None,                    					help="Service instance name")
+define("svcmode",          default="production",            					help="Service mode")
+define("svcssl_cert",      default=None,                    					help="SSL Certificate")
+define("svcprivateKey",    default=None,                    					help="Private Key")
+
+## ======== REGRESSION MODE OPTIONS ====================================================================
+define("regress",   	default=False, help="Regression Test Mode(Runs application logic only)")
+define("munge",         default=None,  help="Munge mode")
+define("target",        default=None,  help="Target db")
+define("plotKey",       default=None,  help="Plot key")
+define("table",         default=None,  help="Table")
+define("time",          default=None,  help="Table")
+define("flow",          default=None,  help="Flow name")
+define("typestr",       default=None,  help="typestr")
+define("int",           default=None,  help="integration")
+define("user",          default=None,  help="unix user")
+define("sortOrder",     default="DESC",help="Sort order")
+define("numBuckets",    default=None,  help="Num of buckets for binning")
+define("pp",            default=False, help="Pretty Print")
+define("start_time",    default=None,  help="Start Time")
+define("end_time",      default=None,  help="End Time")
+define("payloadFile",   default=None,  help="File where the default o/p payload goes.")
+define("jsonstr",       default=None,  help="JSON payload")
+define("date_format",   default=None,  help="Date Format(to be passed on to database)")
+
+
+# Sanity check command-line arguments
+## NOTE: Add more sanity checks if needed here.
+def cliSanityCheck():
+    
+    if options.regress==True:
+        # CLI check is delegated to respective service request handler/UnitTests. 
+        # Different request types would have very different requirements for CLI.
+        pass
+    
+    else:
+
+        if not options.svclog:
+            print("Error: Missing command-line argument. Provide service log location. (--svclog)")
+            sys.exit(1)         
+        if not options.svcport:
+            print("Error: Missing command-line argument. Provide service log location. (--svcport)")
+            sys.exit(1)
+            
+        ##If service mode is not production a HTTP server would be started instead of HTTPS server. 
+        if options.svcmode == 'production':             
+            if not options.svcssl_cert:
+                print("Error: Missing command-line argument. Provide service ssl_certificate. (--ssl_cert)")
+                sys.exit(1)     
+                
+            if not options.svcprivateKey:
+                print("Error: Missing command-line argument. Provide service private key. (--privateKey)")
+                sys.exit(1)
+                
+        if not options.svcconfig:
+            print("Error: Missing command-line argument. Provide service config file. (--svcconfig)")
+            sys.exit(1)                         
+
+#+++++++++++++++++++++++++
+#         MAIN 
+#+++++++++++++++++++++++++
+        
+def main(argv):
+
+        ## Command-line parsing 
+    tornado.options.parse_command_line()
+    
+    log_file_filename  = options.svclog             # Service log location
+    service_instance   = options.svcinst            # Service instance name
+    is_regression_mode = options.regress            # If service mode or regression mode
+    ssl_cert           = options.svcssl_cert        # Path to SSL certificate 
+    privateKey         = options.svcprivateKey      # Path to private key
+    munge_option       = options.munge              # Data munging option (Used for regression mode)
+    service_mode       = options.svcmode            # Service mode
+    
+    hostname           = os.uname()[1]
+    
+    ## If service name is not provided, create one  
+    if not service_instance:    
+        service_instance ="rhg-inst-on-" + hostname + "-" +str(os.getpid())
+    
+    cliSanityCheck()
+    
+    ## Set up loggers
+    main_exe = sys.argv[0]  
+    logger = logging.getLogger(main_exe)
+    logger.setLevel(logging.INFO)
+    
+    #existing_logger_names = logging.getLogger().manager.loggerDict.keys()          
+    #print("EXISTING LOGGERS:" + str(existing_logger_names))    
+    
+        # Create formatter and add it to the log handlers
+    formatter = logging.Formatter('%(asctime)s::::%(name)s::::%(funcName)s::::%(lineno)s::::%(threadName)s::::%(levelname)s::::%(message)s')    
+            
+    logger.info("\t===========================================================================")
+    logger.info("\tR H A E G A L: RCube High-Availability Engine for Graphs and AnaLytics")
+    logger.info("\t===========================================================================")    
+    logger.info("\t         __        ");
+    logger.info("\t       _/  \\    _(\\(o)"    );
+    logger.info("\t      /     \\  /  _  ^^^o"  );
+    logger.info("\t     /   !   \\/  ! '!!!v'"  +"\t           @");
+    logger.info("\t    !  !  \\ _' ( \\____"    +"\t\t         .@@@.");
+    logger.info("\t    ! . \\ _!\\   \\===^\\)" +"\t\t        .@@@@@@.");
+    logger.info("\t     \\ \\_!  \/ __!     |"  +"\t      .@@@@@@@@@.");
+    logger.info("\t      \\!   \/    \\   /*R*\\"   +"\t     .@@@@@@@@@@@@.");
+    logger.info("\t(\\_      _\/   _\\ ) /*H*G*\\"  +"\t   .@@@@@@@@@@@@@@@@.");
+    logger.info("\t \\ ^^--^^ __-^ \/(__~~~~~~~"    +"\t  .@@@@@@@@@@@@@@@@@@.");
+    logger.info("\t  ^^----^^    \"^--v'"       +"\t\t.@@@@@@@@@@@@@@@@@@@@@@.");   
+
+    atomic_counter = AtomicCounter.AtomicCounter(0)
+    isSuccess = True
+
+        
+    try:
+        ## ========  R E G R E S S I O N      M O D E ======================
+        if is_regression_mode:
+            # create extra console handler if needed by uncommenting below
+            # ch = logging.StreamHandler()
+            # ch.setLevel(logging.INFO)
+            # ch.setFormatter(formatter)
+            #logger.addHandler(ch)
+            logger.info("\tRegression test mode. HTTPServer would not be launched.")
+            logger.info("\tSimulating HTTP GET request.")
+            
+            if munge_option=='plot':
+                service_tester = ServicePlotsReqHandlerUT.ServicePlotsReqHandlerUT("plot service tester",atomic_counter)
+                service_tester.simulateGet()
+            elif munge_option=='design_data_summary':
+                service_tester = DesignDataSummaryReqHandlerUT.DesignDataSummaryReqHandlerUT("design summary service tester",atomic_counter)
+                service_tester.simulateGet()
+            elif munge_option=='AllKeys':
+                service_tester = AllKeysDataSummaryReqHandlerUT.AllKeysDataSummaryReqHandlerUT("design all keys service tester",atomic_counter)
+                service_tester.simulateGet()            
+            elif munge_option=='eta_chart':
+                service_tester = ETAChartReqHandlerUT.ETAChartReqHandlerUT("Eta chart service tester",atomic_counter)
+                service_tester.simulateGet()
+            elif munge_option=='eta_update':
+                service_tester = EtaUpdateReqHandlerUT.EtaUpdateReqHandlerUT("Eta update service tester",atomic_counter)
+                service_tester.simulatePost()  		                           
+            else:
+                logger.info("\t Write your new '" + munge_option + "' service here")
+                
+        ## ========  S E R V I C E      M O D E ======================  
+        else:
+        
+            logger.info("\tStarting web service instance:"+ service_instance + " on host:" + hostname)
+            fh = logging.handlers.RotatingFileHandler(log_file_filename, maxBytes=100000000, backupCount=100) # ~ 100 MB log
+            fh.setLevel(logging.INFO)
+            fh.setFormatter(formatter)
+            logger.addHandler(fh)
+            #app_log = logging.getLogger("tornado.application")
+            #app_log.addHandler(handler) 
+            
+            app = tornado.web.Application(
+            
+               handlers=[
+            ##Service  URL,         Service Handler,                       			service handler args
+            (r"/v1/chart",     	    ServicePlotsReqHandler.ServicePlotsReqHandler,		dict(about='plot data munging', counter=atomic_counter)),
+            (r"/v1/design_pkData",  DesignDataSummaryReqHandler.DesignDataSummaryReqHandler,	dict(about='data mining summary', counter=atomic_counter)),         
+            (r"/stop",              StopReqHandler.StopReqHandler,  				dict(svc_mode=service_mode)),
+            (r"/ping",              PingReqHandler.PingReqHandler, 				dict(about='answer ping', counter=atomic_counter)),                  
+            (r"/v1/design_akData",  AllKeysDataSummaryReqHandler.AllKeysDataSummaryReqHandler,	dict(about='summary for all keys', counter=atomic_counter)),
+            (r"/v1/eta_chart",      ETAChartReqHandler.ETAChartReqHandler,			dict(about='PASS/FAIL ETA Chart', counter=atomic_counter)),
+	    (r"/v1/eta_update",     EtaUpdateReqHandler.EtaUpdateReqHandler,			dict(about='ETA update for keys', counter=atomic_counter)),
+            ])
+                       
+            http_server = None
+            if options.svcmode == 'production':
+                logger.info("\tStarting HTTPS Server....")                              
+                http_server = tornado.httpserver.HTTPServer(app, ssl_options={
+                        "certfile": ssl_cert,
+                            "keyfile":  privateKey})
+            else:
+                logger.info("\tStarting HTTP Server....")
+                http_server = tornado.httpserver.HTTPServer(app)
+                                        
+            http_server.listen(options.svcport)
+            logger.info("\tReady to serve ...")
+            logger.info("\t===========================================================================")        
+            tornado.ioloop.IOLoop.instance().start()
+                        
+    except KeyboardInterrupt:
+        logger.info("\t Keyboard interrupt ..stopping service") 
+        tornado.ioloop.IOLoop.instance().stop()
+        
+    except  Exception as e:     
+        logger.error("Rhaegal Exception:{}".format(str(e)))
+        isSuccess=False 
+    
+    if not isSuccess:
+        sys.exit(4)
+                
+if __name__ == "__main__":main(sys.argv[0:])
+

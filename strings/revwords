@@ -1,0 +1,75 @@
+#!/bin/python3
+
+import pdb
+import sys
+
+##Reverses words in a corpus of text.
+## Alternate way, you first revert the entire thing, then start pushing in stack, when ' ' is 
+## encountered, start popping the stack.
+
+def main(argv):
+	
+	strg = "Madam I'm adam"
+	reverseWords(strg)
+
+def reverseWord(strg, start,end):
+
+	#print("ORG WORD:" + str(strg))
+	pdb.set_trace()
+	while start<=end:		
+		tmp = strg[start]	
+		strg[start] = strg[end]
+		strg[end] = tmp
+		start +=1
+		end -=1
+		
+	#print("REV WORD:" + str(strg))	
+	return strg
+
+def reverseWords(strg):
+	
+	if not strg:
+		raise ValueError("Expected string")
+		
+	if len(strg)<2:
+		return strg	
+	
+	start = 0
+	end = len(strg)
+	
+	##Convert to array (arrays may be faster as well)
+	strg_arr = []
+	for c in strg:
+		strg_arr.append(c)	
+	
+	##Reverses the array(copies the array)
+	rev_arr = []
+	for c in reversed(strg_arr):
+		rev_arr.append(c) 
+	
+	start_w = 0
+	end_w = 0
+	#print("LEN:" + str(len(rev_arr)))
+	
+	while end_w !=len(rev_arr):
+	
+		if rev_arr[end_w] == ' ': 			
+			reverseWord(rev_arr, start_w, end_w-1)
+			start_w = end_w+1 
+			print(start_w)
+		end_w +=1
+	
+	#Bcoz last would not get reversed		
+	reverseWord(rev_arr, start_w, end_w-1)	
+	
+	print(str(rev_arr))
+
+def reverseStr(strg):
+
+	strg_arr = []
+	for c in strg:
+		strg_arr.append(c)
+	
+	print(''.join(reversed(strg_arr)))
+	
+if __name__ == "__main__":main(sys.argv[0:])

@@ -1,0 +1,45 @@
+#!/bin/python3
+
+import pdb
+import sys
+
+##Reverses words in a corpus of text.
+## Alternate way, you first revert the entire thing, then start pushing in stack, when ' ' is 
+## encountered, start popping the stack.
+
+def main(argv):
+	
+	strg = "Madam I'm adam"
+	reverseWords(strg)
+
+
+
+def reverseWords(strg):
+	
+	if not strg:
+		raise ValueError("Expected string")
+		
+	if len(strg)<2:
+		return strg	
+	
+	words = list(strg)
+	
+	stack = []
+	
+	for word in words[::-1]:
+		if word == ' ' and stack:
+			w = []
+			while stack:
+				w.append(stack.pop())
+			print(''.join(w))	
+				
+		else:
+			stack.append(word)
+			
+	w = []
+	while stack:	
+		w.append(stack.pop())
+	print(''.join(w))
+	
+	
+if __name__ == "__main__":main(sys.argv[0:])
