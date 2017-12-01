@@ -1,0 +1,39 @@
+#!/import/freetools/exe/python3
+
+import sys
+import threading
+import time
+# Note: thread.event.set() will stop the thread.
+def main(argv):
+	
+	print("Starting thread experiment")
+	threadExpr()
+	print("Ending thread experiment")
+	
+
+def task(task_num):
+	
+	time.sleep(1)
+	print("Task number:{x}".format(x=task_num))
+	
+
+def threadExpr():
+
+	threads = []
+	
+	try:
+	
+		for i in range(1,5):
+		
+			t = threading.Thread(target = task, args = (i,)) 
+			t.start()
+			threads.append(t)
+			t.join()
+			
+	except Exception as e:
+		
+		sys.stderr.write("Exception {}".format(str(e)))		
+		
+	
+
+if __name__ == "__main__":main(sys.argv[0:])

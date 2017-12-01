@@ -1,0 +1,42 @@
+#!/bin/python3
+import threading
+import time
+import logging
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='(%(threadName)-9s) %(message)s',)
+# Semaphores are synhcronization primitive that are used to guard a resource.It works with a 
+# counter rather than locks. Example: Db Server
+# Can take only 5 connections at a time
+# The counter is decremented if semaphore is acquired and incremented if semaphore is released.
+# IF the counter reaches zero, the next thread that tries to acquire it would block.
+
+class ThreadPool:
+    def __init__(self):
+        self.active = []
+        self.lock = threading.Lock()
+    def makeActive(self, name):
+        with self.lock:
+            self.active.append(name)
+            logging.debug('Running: %s', self.active)
+    def makeInactive(self, name):
+        with self.lock:
+            self.active.remove(name)
+            logging.debug('Now Running: %s', self.active)
+
+def f(s, pool):
+    name = threading.currentThread().getName()
+    logging.debug('Waiting to join the pool {}'.format(name))
+    
+    with s: ## This statement will block the rest of the threads after N
+        
+        pool.makeActive(name)
+        time.sleep(0.5)
+        pool.makeInactive(name)
+
+if __name__ == '__main__':
+    pool = ThreadPool()
+    s = threading.BoundedSemaphore(3)
+    for i in range(10):
+        t = threading.Thread(target=f, name='thread_'+str(i), args=(s, pool))
+        t.start()

@@ -1,0 +1,67 @@
+#!/bin/python3
+
+import sys
+import threading
+import time
+
+def main(argv):
+	
+	print("Starting thread experiment")
+
+	thr1 = TrivialTask(1, "Fetch")
+	thr2 = TrivialTask(1, "Decode")
+	thr3 = TrivialTask(1, "Execute")
+	
+	thr1.start()
+	thr2.start()
+	thr3.start()
+	
+	thr1.join()
+	thr2.join()
+	thr3.join()	
+	
+	print("Ending thread experiment")
+	
+
+class TrivialTask(threading.Thread):
+
+	def __init__(self, taskid, name):
+	
+		super().__init__()
+		self.__taskid 	= taskid
+		self.__name 	= name
+	
+	
+	def run(self):
+	
+		print("Running thread {} {}".format(self.__taskid, self.__name))
+		time.sleep(2)
+		print("Finished running thread {} {}".format(self.__taskid, self.__name))
+
+
+def task(task_num):
+	
+	time.sleep(1)
+	print("Task number:{x}".format(x=task_num))
+	
+
+def threadExpr():
+
+	threads = []
+	
+	try:
+	
+		for i in range(1,5):
+		
+			t = threading.Thread(target = task, args = (i,)) 
+			t.start()
+			threads.append(t)
+			t.join()
+			
+	except Exception as e:
+		
+		sys.stderr.write("Exception {}".format(str(e)))		
+		
+	
+
+if __name__ == "__main__":main(sys.argv[0:])

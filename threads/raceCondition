@@ -1,0 +1,112 @@
+#!/bin/python3
+
+import sys
+import threading
+import time
+
+COUNT = 100000
+shared_lock = threading.Lock()
+shared_counter = 0
+
+## This is similar to Item 38 in Effective Python
+def main(argv):
+	
+	print("Starting thread experiment")
+
+	#thr1 = TrivialDecrement(1, "Decrement")
+	#thr2 = TrivialIncrement(1, "Increment")	
+	
+	#Uncomment this code to see race condition
+        # Final count is not zero
+	thr1 = TrivialDecrementRacy(1, "Decrement")
+	thr2 = TrivialIncrementRacy(1, "Increment")		
+	
+	thr1.start()
+	thr2.start()	
+	thr1.join()
+	thr2.join()	
+	
+	print("Final count {}".format(shared_counter))
+	print("Ending thread experiment")
+	
+class TrivialDecrement(threading.Thread):
+
+	def __init__(self, taskid, name):
+	
+		super().__init__()
+		self.__taskid 	= taskid
+		self.__name 	= name
+		print("Thread {} started". format(name))
+	
+	def run(self):
+	
+		global shared_counter
+		
+		for i in range(0, COUNT):
+		
+			shared_lock.acquire()
+			shared_counter-=1
+			shared_lock.release()
+
+class TrivialIncrement(threading.Thread):
+
+	def __init__(self, taskid, name):
+	
+		super().__init__()
+		self.__taskid 	= taskid
+		self.__name 	= name
+		print("Thread {} started". format(name))	
+	
+	def run(self):
+	
+		global shared_counter
+		
+		for i in range(0, COUNT):
+		
+			shared_lock.acquire()
+			shared_counter+=1
+			shared_lock.release()
+		
+
+class TrivialDecrementRacy(threading.Thread):
+
+	def __init__(self, taskid, name):
+	
+		super().__init__()
+		self.__taskid 	= taskid
+		self.__name 	= name
+		print("Thread {} started". format(name))
+	
+	def run(self):
+	
+		global shared_counter
+		
+		for i in range(0, COUNT):
+			shared_counter-=1
+			
+
+class TrivialIncrementRacy(threading.Thread):
+
+	def __init__(self, taskid, name):
+	
+		super().__init__()
+		self.__taskid 	= taskid
+		self.__name 	= name
+		print("Thread {} started". format(name))	
+	
+	def run(self):
+	
+		global shared_counter
+		
+		for i in range(0, COUNT):
+                        #               DO NOT FORGET
+	                # Internally this is not atomic. Its actually 3 operations
+                        # 1. Read var, inc var, then write to var.
+                        # Python thread scheduler can preempt at any time b/w these 3 steps
+                        # leading to corrupt data. Therefore we need synchronization to
+                        # to make this operation atomic. This is the same reason GIL does
+                        # not 'seemigly' help here.
+			shared_counter+=1
+	
+
+if __name__ == "__main__":main(sys.argv[0:])

@@ -1,0 +1,96 @@
+#!/bin/python3
+
+import sys
+from threading import Thread, Condition
+import time
+import random
+
+## A conditon is more advanced version of the event object
+## - The class producer writes to a buffer as long as its not full
+## - The class producer notifies the consumer that the buffer is not empty
+## - The class consumer takes data from the buffer as long as buffer is full
+## - The consumer will report to the producer that the buffer is not full
+
+## Code would continue till producer produces  till full buffer and consumer consumes those number of items
+## Note that we also make producer produce at a faster rate.
+## Read up on condition var vs semaphore, https://stackoverflow.com/questions/3513045/conditional-variable-vs-semaphore
+
+items	  = []
+condition = Condition()
+
+FULL_BUFFER = 10
+
+class Producer(Thread):
+
+	def __init__(self):
+		super().__init__()
+		
+	def produce(self):
+		
+		global condition
+		global items
+		
+		condition.acquire()
+		
+		if len(items) == FULL_BUFFER:
+			condition.wait()
+			
+			print("Producer, total items produced {}. Full Buffer".format(len(items)))
+		
+		rand_item = random.randint(500,20000)
+		items.append(rand_item)	
+			
+		print("Producer, produced item {} total items produced {}".format(rand_item, len(items)))	
+		
+		condition.notify()
+		condition.release()
+
+	def run(self):
+	
+		for i in range(0,20):
+			time.sleep(5)
+			self.produce()					
+
+class Consumer(Thread):
+
+	def __init__(self):
+		super().__init__()
+		
+	def consume(self):
+		
+		global condition
+		global items
+		
+		condition.acquire()
+		
+		if len(items) == 0:
+			condition.wait()
+			print("Consumer notify: no item to consume")	
+		
+		popped = items.pop()
+		
+		print("Consumer, consumed an item {}".format(popped))
+		
+		print("Consumer, items left to consume are {}".format(len(items)))
+		condition.notify()
+		condition.release()
+		
+	def run(self):
+	
+		for i in range(0,20):
+			time.sleep(10)
+			self.consume()	
+		
+
+def main(argv):	
+	
+	print("Starting syncronization with condition experiment")
+	producer = Producer()
+	consumer = Consumer()
+	producer.start()
+	consumer.start()
+	producer.join()
+	consumer.join()	
+	print("Ending syncronization with condition experiment")
+	
+if __name__ == "__main__":main(sys.argv[0:])

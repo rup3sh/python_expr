@@ -1,0 +1,104 @@
+#!/bin/python3
+
+import sys
+from threading import Thread, Condition
+import time
+import random
+
+## A conditon is more advanced version of the event object
+## - The class producer writes to a buffer as long as its not full
+## - The class producer notifies the consumer that the buffer is not empty
+## - The class consumer takes data from the buffer as long as buffer is not empty
+## - The consumer will report to the producer that the buffer is not full
+
+## Code would continue till producer produces  till full buffer and consumer consumes those number of items
+## Note that we also make producer produce at a faster rate.
+## Read up on condition var vs semaphore, https://stackoverflow.com/questions/3513045/conditional-variable-vs-semaphore
+
+items = []
+condition = Condition()
+
+FULL_BUFFER = 10
+NUM_ITEMS_TO_PRODUCECONSUME = 5
+PRODUCTION_RATE = 2  # Every 2 seconds
+CONSUMPTION_RATE = 5 # Every 4 seconds
+
+class Producer(Thread):
+
+	def __init__(self):
+		super().__init__()
+		
+	def produce(self):
+		
+		global condition
+		global items
+		
+		with condition:
+			# Block if full buffer by waiting on condition. Do not produce anymore
+			if len(items) == FULL_BUFFER:
+				condition.wait()			
+				print("Producer, total items in queue {}. Full Buffer".format(len(items)))
+		
+			rand_item = random.randint(100,200)
+			items.append(rand_item)			
+			print("Produced item {}, total items in queue {}".format(rand_item, len(items)))	
+		
+			condition.notifyAll()
+		
+
+	def run(self):
+	
+		for i in range(0,NUM_ITEMS_TO_PRODUCECONSUME):
+			time.sleep(PRODUCTION_RATE)
+			self.produce()					
+
+class Consumer(Thread):
+
+	def __init__(self, name):
+		super().__init__()
+		self.name = name
+		
+	def consume(self):
+		
+		global condition
+		global items
+		
+		with condition:
+
+			#Block if empty buffer by waiting on condition. There is nothing to consume
+			if len(items) == 0:
+				condition.wait()
+				print("Consumer {} notify: no item to consume.".format(self.name))	
+		
+			popped = items.pop()
+		
+			print("Consumer {}, consumed an item {}".format(self.name, popped))		
+			print("Consumer {}, items left to consume are {}".format(self.name, len(items)))
+			#condition.notify()
+		
+	def run(self):
+	
+		for i in range(0,NUM_ITEMS_TO_PRODUCECONSUME):
+			time.sleep(CONSUMPTION_RATE)
+			self.consume()	
+		
+
+def main(argv):	
+	
+	print("Starting syncronization with condition experiment")
+	producer = Producer()
+	producer.start()
+
+	consumer1 = Consumer("C1")	
+	consumer1.start()
+
+	consumer2 = Consumer("C2")	
+	consumer2.start()
+
+	producer.join()
+	consumer1.join()
+	consumer2.join()
+	
+	print("Ending syncronization with condition experiment")
+	
+if __name__ == "__main__":main(sys.argv[0:])

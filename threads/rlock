@@ -1,0 +1,106 @@
+#!/bin/python3
+
+import sys
+import threading
+import time
+
+COUNT            = 20000
+REMOVE_COUNT     = 2000
+
+def main(argv):
+	
+	print("Starting RLock experiment")
+
+	bx 		= Box("Pandoras Box")
+	
+	thr1 	= BoxAdder("Mr Adder", bx)
+	thr2 	= BoxRemover("Mr Remover", bx)	
+	
+	thr1.start()
+	thr2.start()	
+	thr1.join()
+	thr2.join()	
+	
+	print("Final number of items {}".format(bx.getTotalItems()))
+	print("Ending thread experiment")
+
+
+class BoxAdder(threading.Thread):
+
+	def __init__(self, name, box):
+	
+		super().__init__()
+		self.__name = name
+		self.__box  =  box
+		print("Starting Box Adder task")
+	
+	def run(self):
+	
+		for i in range(0, COUNT):
+			self.__box.add()
+			
+class BoxRemover(threading.Thread):
+
+	def __init__(self, name, box):
+	
+		super().__init__()
+		self.__name = name
+		self.__box  =  box
+		print("Starting Box Remover task")
+	
+	def run(self):
+	
+		for i in range(0, REMOVE_COUNT):
+			self.__box.remove()	
+	
+		
+	
+class Box(object):
+
+	lock = threading.RLock()
+
+	def __init__(self, name):
+	
+		self.__name 	  = name
+		self.__itemsAdded = 0
+		self.__itemsRemoved = 0
+		self.__totalItems = 0
+		
+		print("BOX {} started". format(name))
+	
+	def add(self):
+	
+		Box.lock.acquire()
+		self.__itemsAdded +=1
+		self.__adjustTotal(1)
+		Box.lock.release()
+	
+	def remove(self):
+	
+		Box.lock.acquire()
+		self.__itemsRemoved -=1
+		self.__adjustTotal(-1)
+		Box.lock.release()
+	
+	# RLock (Reentrant lock) is needed for this, same thread can reacquire this lock.
+	# RLock can be acquired multiple times unlike Lock with can only be acquired once.
+	# RLock can only be released by the thread that acquires it, unlike Lock which can
+	# be released by another thread.
+	# Also useful when same methods are called from both outside and inside the class.
+	# Therefore, Useful in recursive code.
+	# RLock blocks only other thread unlike simple Lock which blocks all threads.
+
+	# Java synchronous keyword is similar to this 
+	def __adjustTotal(self, n):
+	
+		Box.lock.acquire()
+		self.__totalItems += n
+		Box.lock.release()
+		
+	def getTotalItems(self):
+	
+		return self.__totalItems
+				
+				
+
+if __name__ == "__main__":main(sys.argv[0:])
