@@ -1,0 +1,22 @@
+#!/bin/python3
+
+from functools import wraps
+
+def hwdecorator(func):
+	@wraps(func) # This is needed so that the function name does not change (for debugging)
+	def decorator():
+		ret = func()
+		return "<blink> " + ret + "<blink>"
+	return decorator
+
+@hwdecorator
+def hw():
+	return ("Hello World!")
+
+def main():
+
+	print ("Python decorator!")
+
+	print(hw())
+
+if __name__=="__main__":main()

@@ -1,0 +1,46 @@
+#!/bin/python3
+
+class Hindi():
+
+	def speak_hindi(self):
+		print("Speaking hindi...")
+
+class English():
+
+	def speak_english(self):
+		print("Speaking english..")
+
+class Generic():
+
+	def speak_generic(self):
+		print("Speaking something generic...")
+
+# The prettier implemetation can be done by using/updating internal dictionary
+class Adapter():
+
+	def __init__(self, obj, lang):
+		self.lang = lang
+		self.obj = obj
+
+	def speak(self):
+		if (self.lang == "Hindi"):
+			self.obj.speak_hindi()
+		elif (self.lang == "English"):
+			self.obj.speak_english()
+		else:
+			self.obj.speak_generic()
+
+def main():
+
+	print ("Python adapter pattern ugly version")
+
+	english = English()
+	hindi = Hindi()
+	gen = Generic()
+
+	objects = [Adapter(english, "English"), Adapter(hindi, "Hindi"), Adapter(gen, "xxx")]
+
+	for o in objects:
+		o.speak()
+
+if __name__=="__main__":main()
