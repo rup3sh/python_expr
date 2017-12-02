@@ -1,0 +1,39 @@
+#!/bin/python3
+
+import pdb
+import sys
+
+
+#Fibbionacci
+
+def main(argv):
+
+	fibGenerator()
+	
+def fib(cache, n):
+	
+	if n not in cache:
+		cache[n] = _fib(n)
+	
+	return cache[n]	
+	
+def _fib(n):
+
+	if n<2:
+		return n
+	else:
+		return _fib(n-2) + _fib(n-1)
+						
+def fibGenerator():
+	
+	try:
+		
+		cache = dict()
+		print(fib(cache, 6))
+				
+	except Exception as e:
+		
+		sys.stderr.write("Exception:{}".format(str(e)))
+	
+	
+if __name__ == "__main__":main(sys.argv[0:])

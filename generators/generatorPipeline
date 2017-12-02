@@ -1,0 +1,36 @@
+#!/bin/python3
+
+import pdb
+import sys
+
+## Generators are somewhat opposite of coroutines.Generators produce values and coroutines consume value.
+##Find longest line in a file
+
+def main(argv):
+
+	
+	generatorPipeline()
+
+
+def generatorPipeline():
+	
+	try:
+		filepath = '../Resources/names.list'
+		myFile = open(filepath, 'r')
+		
+		lines  		 = (line.strip() for line in myFile)
+		lengths_of_lines = ((line,len(line)) for line in lines)
+		
+		#max function takes an iterable and a key
+		longest = max(lengths_of_lines, key=lambda x:x[1])
+		  		
+		#print(type(lines))
+		print(str(longest))				
+		myFile.close()
+				
+	except Exception as e:
+		
+		sys.stderr.write("Exception:{}".format(str(e)))
+	
+	
+if __name__ == "__main__":main(sys.argv[0:])

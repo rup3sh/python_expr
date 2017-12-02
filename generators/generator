@@ -1,0 +1,70 @@
+#!/bin/python3
+
+import pdb
+import sys
+
+
+##Reverses words in a corpus of text.
+
+def main(argv):
+
+	generatorDemo()
+	
+
+def list_of_even(n):
+
+	for i in range(0,n+1):
+		if i%2 == 0:
+			yield i 
+			
+def generatorDemo():
+	
+	try:
+		
+		x = list_of_even(10)
+		print(type(x))
+		
+		for i in x:
+			print("EVEN:" + str(i))
+		
+		the_list = ["stanley", "ave", "fremont", "los angeles", "istanbul", "moscow", "korea"]
+		
+		#Print the reverse list
+		print(the_list[::-1])
+		#list comprehension
+		
+		new_list = [ item.upper() for item in the_list ]
+		
+		print("NEWLIST:" + str(new_list))
+		
+		#generator expression
+		
+		gen_object = (item.upper() for item in the_list) 
+		#You can also call next() on this generator object
+		# Generator would call a StopIteration Execepton if you cannot call next anymore
+		
+		
+		print(type(gen_object))
+		
+		##This yields the items one by one toa list
+		newlist = list(gen_object)
+		
+		print("YET ANOTHER NEWLIST:" + str(new_list))
+		
+		# As you can see, generator objects cannot be reused
+		# So this would be empty		
+		one_more_list = list(gen_object)		
+		print("ONE MORE LIST:" + str(one_more_list))
+		
+		# Capitalizes the word and reverses the word in one step
+		
+		ultimate_gen = (item[::-1] for item in (item.upper() for item in the_list))
+		
+		print("ULTIMATE LIST:" + str(list(ultimate_gen)))
+		
+	except Exception as e:
+		
+		sys.stderr.write("Exception:{}".format(str(e)))
+	
+	
+if __name__ == "__main__":main(sys.argv[0:])

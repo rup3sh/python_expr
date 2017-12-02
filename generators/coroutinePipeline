@@ -1,0 +1,93 @@
+#!/import/freetools/exe/python3
+
+import pdb
+import sys
+
+## Coroutine Pipeline can be used to create complex producer consumer patterns like router, multiplexers etc.
+
+def main(argv):
+
+	
+	coroutinePipelineExample()
+
+
+''' # Write short file names to short_name and long file name to long name
+'''
+
+def producer(filepath):
+	
+	try:
+	
+		myFile  = open(filepath, 'r')
+		consumer = router(10)
+		
+		next(consumer)
+			
+		for line in myFile:
+			#print(line)
+			x = line.strip()			
+			consumer.send(x)
+			
+		consumer.close()
+		myFile.close()
+		
+	except Exception as e:
+	
+		sys.stderr.write("Exception:{}\n".format(str(e)))
+
+# Write short file names to short_name and long file name to long name
+def router(max_size):
+
+	try:
+		f1 = file_consumer("./short.out")
+		f2 = file_consumer("./long.out")
+		next(f1)
+		next(f2)
+		
+		while True:
+	
+			line = yield
+			
+			if len(line)>max_size:
+				f2.send(line)
+			else:
+				f1.send(line)	
+			
+	except GeneratorExit:	
+	
+		f1.close()
+		f2.close()
+		
+		print("Router Finished")
+
+
+def file_consumer(file_location):	
+	
+	outFile=None
+	
+	try:
+		print("File consumer {} started".format(file_location))
+		
+		outfile = open(file_location, 'w')
+		
+		while True:
+			line = yield
+			outfile.write(line)
+			outfile.write('\n')	
+			
+	except GeneratorExit:
+	
+		if outfile:
+			outfile.close()
+
+def coroutinePipelineExample():
+	
+	try:
+		producer("./names.list")
+				
+	except Exception as e:
+		
+		sys.stderr.write("Exception:{}".format(str(e)))
+	
+	
+if __name__ == "__main__":main(sys.argv[0:])

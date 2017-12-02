@@ -1,0 +1,52 @@
+#!/bin/python3
+
+import pdb
+import sys
+import random
+
+##Reverses words in a corpus of text.
+
+def main(argv):
+
+	listComp()
+	
+	
+def listComp():
+	
+	the_list = ["stanley", "ave", "fremont", "los angeles", "istanbul", "moscow", "korea"]
+	
+	x = sorted(the_list, reverse=True)
+	
+	print(str(x))	
+	
+	#Sorted by keys (case-insensitive)
+	the_dict = {'aa':"season 1", 'xx':"season 2", 'bin':"season 3", "UPercase":"ssw"}
+	y = sorted(the_dict, reverse = True, key=str.upper)
+
+	print(str(y))
+	
+	#Create list of tuples
+	the_tuples = [ ('minnie', 32, 'mouse'),('mickey', 122, 'mouse'), ('peppa', 132, 'pig'),\
+			('daddy', 324, 'pig'), ('mummy', 3254, 'pig'),('ben', 32, '&holly') ]
+	
+	#Sort record by name
+	z1 = sorted(the_tuples, key=lambda x:x[1], reverse = True)
+	
+	print(str(z1))
+	
+	##filter by pig
+	z2 = list(filter(lambda x:x[2]=='pig', z1))	
+	print("ONLY PIG:" + str(z2))
+	print(type(z2))
+	
+	samples = random.sample(range(200), 5)
+	
+	print("Samples:" + str(samples))
+	
+	random.seed(8)
+	
+	dragons = ['rhaegal', 'drogon', 'viserion', 'smaug', 'ragnarok']	
+	random.shuffle(dragons)
+	print(str(dragons))	
+	
+if __name__ == "__main__":main(sys.argv[0:])

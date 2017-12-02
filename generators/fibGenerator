@@ -1,0 +1,66 @@
+#!/bin/python3
+
+import pdb
+import sys
+
+
+##Reverses words in a corpus of text.
+
+def main(argv):
+
+	fibGenerator()
+	
+def fib(n):
+	
+	if n == 0 or n==1:
+		#print(1)
+		return 1
+	else:
+		x = fib(n-1) + fib(n-2)
+		#print (x)
+		return x
+
+def get_next_fib(n):
+
+	for i in range(n):
+		yield fib(i) 
+
+def fib_elegant_generator():
+	print("Running elegant fib generator ..")
+
+	trailing, lead = 0,1
+	
+	while True:
+		yield lead
+		trailing, lead = lead, trailing+lead	
+			
+def fibGenerator():
+	
+	try:
+		
+		'''fib_gen = get_next_fib(5)
+				
+		x = list(fib_gen)				
+		print(str(x))
+		'''
+		
+		'''c =0
+		
+		for n in fib_elegant_generator():
+			print(str(n))
+			c+=1
+			if c>10:
+				break
+		'''
+			
+		#Elegant for loop
+		f = fib_elegant_generator()
+		for _ in range(10):
+			print(str(next(f)))
+				
+	except Exception as e:
+		
+		sys.stderr.write("Exception:{}".format(str(e)))
+	
+	
+if __name__ == "__main__":main(sys.argv[0:])

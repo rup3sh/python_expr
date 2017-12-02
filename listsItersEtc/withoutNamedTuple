@@ -1,0 +1,50 @@
+#!/bin/python3
+
+import pdb
+import sys
+import itertools
+import collections
+from functools import reduce
+import timeit
+import cProfile
+
+def main(argv):
+
+	lines = lineGenerator("../Resources/goldmedals.txt")
+		
+	records = [(line[0], line[1], line[2], line[3]) for line in lines]
+	
+	athMostGolds(records)
+	
+	#print(records)
+
+def athMostGolds(records):
+	aths = collections.defaultdict(list)
+	
+	for r in records:
+		aths[r[1]].append(1)
+		
+	reduced = ((k, sum(v)) for k,v in aths.items())		
+	
+	sorted_aths = sorted(reduced, key=lambda x:x[1], reverse=True)
+	
+	print(sorted_aths[:2])	
+	
+def lineGenerator(filename):
+
+	try:
+	
+		myFile = open(filename , 'r')
+		
+		for line in myFile:
+			tokens = line.strip().split('\t')
+			yield tokens
+			
+		myFile.close()	
+			
+	
+	except Exception as e:
+		
+		sys.stderr.write(str(e))
+	
+if __name__ == "__main__":main(sys.argv[0:])

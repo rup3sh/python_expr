@@ -1,0 +1,116 @@
+#!/bin/python3
+
+import pdb
+import sys
+import itertools
+import collections
+
+##Reverses words in a corpus of text.
+
+def main(argv):
+
+	namedTupleDemo()
+	
+
+def lineGenerator():
+	
+	try:
+	
+		myFile = open('sigem.csv', 'r')
+		
+		for line in myFile:
+		
+			if '#' in line:
+				continue
+			
+			x = line.strip()
+			tokens = x.split('\t')
+			yield tokens[:8]
+		
+	except 	Exception as e:
+	
+		sys.stderr.write("Exception:{}".format(str(e)))
+
+## All keys that match a value
+def iterKwArgs(records, **kwargs):
+	
+	kw = [record for record in records \
+			if all(getattr(record, key)==value for key,value in kwargs.items())]
+	print(str(kw))		
+
+def setIntersectionDemo(records, cellname1, cellname2):
+	
+	## This rsults in a set object
+	users_cell_1 = { record.users for record in records if record.cells==cellname1}
+	users_cell_2 = { record.users for record in records if record.cells==cellname2}
+	
+	print(type(users_cell_1))
+	
+	# Now you can simply intersect sets
+	both_intersection = users_cell_1 & users_cell_2	
+	print(str(both_intersection))
+	
+	# UNION
+	
+	both_union = users_cell_1 | users_cell_2	
+	print(str(both_union))
+
+
+	# Difference
+	
+	both_diff1 = users_cell_1 - users_cell_2	
+	print(str(both_diff1))
+
+	both_diff2 = users_cell_2 - users_cell_1	
+	print(str(both_diff2))
+
+
+# top2 cell and sizes for each user
+
+def topUsersPerCell(records, cellname):
+
+	top = collections.Counter(record.users for record in records if record.cells == cellname)
+	
+	print(str(top.most_common(5)))
+	
+
+def defDictDemo(records):
+
+	cells_by_user = collections.defaultdict(list)
+	
+	for record in records:
+		cells_by_user[record.cells].append(record.users)	
+	
+	print(str(cells_by_user['rbsu']))
+		
+def namedTupleDemo():
+	
+	#sigem is the named tuple here
+	sigem = collections.namedtuple('sigem', ['users', 'dirs', 'cells', 'sizes', 'nets', 'xtors', 'runMems', 'reqMems'])
+	
+	lines = lineGenerator()
+	
+	records = [sigem(*tokens) for tokens in lines]
+	
+	#for _ in records: print(_)
+	
+	## Count users
+	#user_c = collections.Counter(record.users for record in records) 
+	#user_c = collections.Counter(record.users for record in records if record.cells=='rbsu' )					
+						
+	#print(str(user_c))
+	
+	#Most commong users
+	#top_5 = user_c.most_common(5)
+	
+	#print(str(top_5))
+	
+	#topUsersPerCell(records,'rbsu')
+	#defDictDemo(records)
+	
+	#setIntersectionDemo(records, 'rbsu', 'vsm')	
+	 
+	iterKwArgs(records, cells='vsm',  users = 'wau')
+	
+	
+if __name__ == "__main__":main(sys.argv[0:])

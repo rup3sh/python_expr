@@ -1,0 +1,81 @@
+#!/bin/python3
+
+import pdb
+import sys
+
+## Generators are somewhat opposite of coroutines.Generators produce values and coroutines consume value.
+##Coroutines
+##	- consume value
+## 	- May not return anything
+##      - not for iteration
+##	Technically, coroutines are built from generators. 
+
+## Couroutine does this -
+##	- Continually receives input, processes input, stops at yield statement
+##	- Coroutine have send method 
+##   	- Yield in coroutine pauses the flow and also captures values
+##	(Very powerful in data processing programs)
+
+def main(argv):
+
+	
+	coroutineDemo()
+
+def barebones_coroutine():
+
+	while True:
+		x = yield # Essentially, control pauses here until send is invoked by caller.
+		print("In coroutine:" + str(x))
+
+def mc_decorator(func):
+	def myfunc_wrapper(*args, **kwargs):
+		cr = func(*args, **kwargs)
+		next(cr)
+		return cr
+	return myfunc_wrapper	
+	
+#Elaborate coroutine with decoratr to wrap it so that calling code does not have to call next
+@mc_decorator
+def message_checker(initial_list):
+	counter = 0	
+	try:
+		while True:
+			received_msg = yield
+			
+			if received_msg in initial_list:
+				counter+=1
+				print(counter)	 
+				
+	except GeneratorExit: # This happens during closing the coroutine
+		print ("Final Count:" + str(counter))
+
+			
+def coroutineDemo():
+	
+	try:
+		bbcor = barebones_coroutine()
+		## Have to initialize the internal generator
+		next(bbcor)		
+		bbcor.send(25)
+		bbcor.send("This is how we do it!")
+		bbcor.close()
+		print("Closed barebones coroutine")
+
+		the_list = ["stanley", "ave", "fremont", "los angeles", "istanbul", "moscow", "korea", "india"]
+		
+		mc = message_checker(the_list)
+		#next(mc) DUE TO DECORATOR, we do not have to do this
+		mc.send('japan')
+		mc.send('korea')
+		mc.send('usa')
+		mc.send('india')
+		mc.send('india')
+				
+		mc.close()
+				
+	except Exception as e:
+		
+		sys.stderr.write("Exception:{}".format(str(e)))
+	
+	
+if __name__ == "__main__":main(sys.argv[0:])

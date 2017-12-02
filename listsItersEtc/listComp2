@@ -1,0 +1,68 @@
+#!/bin/python3
+
+import pdb
+import sys
+import itertools
+
+def main(argv):
+
+	iterDemo()
+	
+	
+def iterDemo():
+	
+	#myFile = open('sigem.csv', 'r')
+	
+	# Read only first 500 lines
+	myFile = open('../Resources/sigem.csv', 'r').readlines()[:101]
+	#Read from back
+	#myFile = open('../Resources/sigem.csv', 'r').readlines()[5186:5188:]
+	users = []
+	dirs= []
+	cells= []
+	sizes = []
+	nets = []
+	xtors= []
+	runMems = []
+	reqMems = []
+		
+	for line in myFile:
+		
+		if '#' in line:
+			continue
+			
+		x = line.strip()
+		tokens = x.split('\t')
+		#print(str(tokens))
+			
+		users.append(tokens[0])
+		dirs.append(tokens[1])
+		cells.append(tokens[2])
+		sizes.append(float(tokens[3]))
+		nets.append(int(tokens[4]))
+		xtors.append(int(tokens[5]))
+		runMems.append(float(tokens[6]))
+		reqMems.append(float(tokens[7]))		
+	
+	#myFile.close()
+	 	
+	print("Records read:" + str(len(users)))
+	
+	# User, Cell, Size > 1 (final ds can be tuple, list, dict etc)
+	#results = [{user:[cell, sz]}  for user, cell, sz in zip(users, cells, sizes) if sz > 1]
+	#results = [(user, cell, sz)  for user, cell, sz in zip(users, cells, sizes) if sz > 1]				
+	#print(str(results[0:5]))
+	
+	#Same thing becomes generator
+	results = ((user, cell, sz, runMem)  for user, cell, sz, runMem in zip(users, cells, sizes, runMems) if sz > 1)				
+	#next(results)
+	#for _ in results: print(_)
+	
+	##Filter by more than 1500
+	filtered = filter((lambda x: x[2]>1500 and x[3]>1000), results)
+	
+	for _ in filtered: print(_)
+	
+	results.close()
+	
+if __name__ == "__main__":main(sys.argv[0:])

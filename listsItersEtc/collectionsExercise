@@ -1,0 +1,92 @@
+#!/bin/python3
+
+import pdb
+import sys
+import itertools
+import collections
+from functools import reduce
+import timeit
+import cProfile
+
+def main(argv):
+
+	#cProfile.run('namedTupleDemo()')
+	namedTupleDemo()
+
+def lineGenerator():
+	
+	try:
+	
+		myFile = open('../Resources/goldmedals.txt', 'r')
+		
+		for line in myFile:
+			
+			if '#' in line:
+				continue
+			
+			x = line.strip()
+			tokens = x.split('\t')
+			yield tokens
+		
+	except 	Exception as e:
+	
+		sys.stderr.write("Exception:{}".format(str(e)))
+
+
+def atheletesWithMostGolds(records, top):
+		
+	# One way(pythonic)
+	#ath_counts = collections.Counter(record.athlete for record in records)	
+	
+	#ath = ath_counts.most_common(top)
+	#for _ in ath: print(_)
+	
+	#Another way
+	d = collections.defaultdict(list)
+	
+	for record in records:
+		d[record.athlete].append(1)
+		
+	ath = [(k, sum(v)) for k,v in d.items()]
+		
+	ath_s = sorted(ath, key=lambda x: x[1], reverse=True)
+	
+	#for _ in ath_s: print(_)
+	print ("MOST GOLDS")
+	print(str(ath_s[:5]))
+	
+
+def athWithDifferentEvents(records):
+
+	ath = collections.defaultdict(set)
+	
+	for record in records:
+		#Remove similar entries for events (just for display, real code needs more work to fetch events properly)
+		events = record.event.split(' ')
+		for e in events:
+			ath[record.athlete].add(e)
+	
+	ath_c = [(k, len(v)) for k, v in ath.items()]
+	
+	ath_s = sorted(ath_c, key = lambda x:x[1], reverse=True)
+	
+	print ("MOST GOLDS IN DIFFERENT EVENTS")	
+	print(str(ath_s[:5]))
+		
+		
+def namedTupleDemo():
+	
+	
+	#medals = collections.namedtuple('medals', ['games','year','sport','discipline','athlete',\
+	#			'team','gender','event','medal','gold','silver','bronze'])
+	
+	medals = collections.namedtuple('medals', ['year','athlete', 'country', 'event'])
+	
+	lines = lineGenerator()	
+	records = [medals(*tokens) for tokens in lines]	
+	#for _ in records: print(_)
+
+	atheletesWithMostGolds(records, 5)
+	athWithDifferentEvents(records)
+	
+if __name__ == "__main__":main(sys.argv[0:])

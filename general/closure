@@ -1,0 +1,39 @@
+#!/bin/python3
+
+import sys
+
+# Closure is the technique by which some data get attached to code.
+# The value in enclosing scope is remembered, even if varaible goes out of scope
+# or even if function itself is removed from current namespace
+
+# This criteria must be met inorder to have closure in Python
+# 1. We must have a nested function
+# 2. The nested function must refer to a value in the enclosing function
+# 3. The enclosing function must return the nested function
+
+
+# What is closure good for?
+# It can provide some form of data hiding. It can be alternative to implementing a full-blown class.
+# Decorators in python make extensive use of closures as well.
+
+def main(argv):
+	
+	#Nothing happens if only this line is there without assignment	
+	log_printer("does nothing", "Demo of closure") 
+	
+	demo1 = log_printer("Log 1", "Demo 1 of closure")
+	demo2 = log_printer("Screen","Demo 2 of closure")
+	
+	demo2()	
+	demo1()
+	
+def log_printer(prefix, message):
+
+	
+	def print_msg():
+		#Message is non local variable here
+		print (prefix + ":::" + message)
+		
+	return print_msg	
+	
+if __name__ == "__main__":main(sys.argv[0:])

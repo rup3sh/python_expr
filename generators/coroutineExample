@@ -1,0 +1,79 @@
+#!/bin/python3
+
+import pdb
+import sys
+
+## Generators are somewhat opposite of coroutines.Generators produce values and coroutines consume value.
+##Coroutines
+##	- consume value
+## 	- May not return anything
+##      - not for iteration
+##	Technically, coroutines are built from generators. 
+
+## Couroutine does this -
+##	- Continually receives input, processes input, stops at yield statement
+##	- Coroutine have send method 
+##   	- Yield in coroutine pauses the flow and also captures values
+##	(Very powerful in data processing programs)
+
+## Coroutine Pipeline can be used to create complex producer consumer patterns like router, multiplexers etc.
+
+def main(argv):
+
+	
+	coroutineExample()
+
+
+''' Use a sender to send lines one by one to a coroutine and look for a particular name
+	and count how many times it occurs.
+'''
+
+def producer(filepath, consumer):
+	
+	try:
+	
+		myFile  = open(filepath, 'r')
+		
+		next(consumer)
+			
+		for line in myFile:
+			#print(line)
+			consumer.send(line.strip())
+			
+		consumer.close()
+		myFile.close()
+		
+	except Exception as e:
+	
+		sys.stderr.write("Exception:{}\n".format(str(e)))
+
+def consumer(match_string):
+
+	try:
+		count = 0
+		while True:
+	
+			line = yield
+			
+			names = line.split(" ")
+			#print("NAMES:" + str(names))
+			if match_string in names:
+				count +=1
+			
+	except GeneratorExit:	
+		
+		print("Found {} {} times.". format (match_string, count))
+
+
+def coroutineExample():
+	
+	try:
+		c = consumer("Verma")
+		producer("./names.list", c)
+				
+	except Exception as e:
+		
+		sys.stderr.write("Exception:{}".format(str(e)))
+	
+	
+if __name__ == "__main__":main(sys.argv[0:])

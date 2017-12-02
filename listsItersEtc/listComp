@@ -1,0 +1,82 @@
+#!/bin/python3
+
+import pdb
+import sys
+
+##Reverses words in a corpus of text.
+
+def main(argv):
+
+	listComp()
+	
+	
+def listComp():
+	
+	the_list = ["stanley", "ave", "fremont", "los angeles", "istanbul", "moscow", "korea"]
+	
+	print(the_list[0:len(the_list)])
+	#Slicing
+	
+	#the_list[2:] = "paz"
+	#['stanley', 'ave', 'p', 'a', 'z'] # This replaces everything from indexs 2 onwards
+	
+	#Everything except the last one
+	#print(str(the_list[:-1]))
+	
+	#Prints 2, 3 only
+	#print(str(the_list[2:4])) 
+	
+	#Prints reverse -N onwards, but counting from 1 "los angeles", "istanbul", "moscow", "korea"]
+	#print(str(the_list[-4:])) 
+	
+	#Prints from start except last 4  ["stanley", "ave", "fremont",
+	#print(str(the_list[:-4])) 
+	
+	#Prints from start, skips odd positions ['ave', 'los angeles', 'moscow']
+	#print(str(the_list[1::2])) 
+	
+	#Prints from reverse at 1, skips odd positions (only 'ave')
+	#print(str(the_list[1::-2])) 
+	
+	#the_list[3:3] = "California"
+	#['stanley', 'ave', 'fremont', 'C', 'a', 'l', 'i', 'f', 'o', 'r', 'n', 'i', 'a', 'los angeles', 'istanbul', 'moscow', 'korea']
+ 	
+	#Insert new list at a position
+	#the_list[3:3] = ["California"]
+	#['stanley', 'ave', 'fremont', 'California', 'los angeles', 'istanbul', 'moscow', 'korea']
+
+	# Modifies list to ['stanley', 'ave', 'fremont', 'California', 'moscow', 'korea']
+	#the_list[3:5] = ["California"]
+	
+	# Delete middle of the list  ['stanley', 'ave', 'fremont','moscow', 'korea']
+	#the_list[3:5] = []
+	
+	##Add list to another list
+	add_this = ["africa", "asia", "antarctica"]
+	
+	the_list.extend(add_this)
+	
+	#Insert in the list
+	the_list.insert(4, 'alameda')
+	
+	#Delete an element by index
+	x = the_list.pop(3)
+	
+	#Delete an element by name
+	the_list.remove('moscow')
+	
+	print(str(the_list))
+	
+	#In-place reversal
+	the_list.reverse()
+	
+	print(str(the_list))
+	
+	print("Index of africa is: "+  str(the_list.index('africa')))	
+	
+	# Count occurrence
+	
+	print(str(the_list.count('fremont')))
+
+	
+if __name__ == "__main__":main(sys.argv[0:])

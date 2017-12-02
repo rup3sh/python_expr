@@ -1,0 +1,39 @@
+#!/bin/python3
+
+import pdb
+import sys
+import itertools
+
+def main(argv):
+
+	fileDemo()
+	
+	
+def fileDemo():
+	
+	try:
+	
+		filepath = './file.data'
+		myFile = open(filepath, 'w')
+		
+		myFile.write("this is how we do it!")
+		myFile.write("This Is How We Do It Again!")
+		myFile.close()
+		
+		print("Reading file now...")
+		
+		myFile = open(filepath, 'r')
+		
+		myFile.seek(15)		
+		line = myFile.read(10)		
+		print (type(line))
+		print (str(line))
+		myFile.close()
+		
+		
+	except Exception as e:
+		
+		sys.stderr.write("cannot write/read file")
+	
+	
+if __name__ == "__main__":main(sys.argv[0:])

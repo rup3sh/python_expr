@@ -1,0 +1,51 @@
+#!/import/freetools/exe/python3
+
+import pdb
+import sys
+import itertools
+
+##Reverses words in a corpus of text.
+
+def main(argv):
+
+	iterDemo()
+	
+	
+def iterDemo():
+	
+	## Infinite counting, starting from 50
+	#for x in itertools.count(50):
+	#	print(str(x))
+		
+	#	if x == 200:
+	#		break;
+	
+	## Infinite cycling thru
+	
+	count = 0
+	
+	#for x in itertools.cycle(' This is how we do it!'):
+	#	print(x)
+	#	count +=1
+		
+	#	if count > 100:
+	#		break
+	
+	list_of_ints = [1,2,3,3]
+	
+	for x in itertools.permutations(list_of_ints):
+		print(x)
+		count +=1
+		
+	print("Total Permutations:{0}".format(count))	
+	
+	comb_count = 0
+	for x in itertools.combinations(list_of_ints, 2):
+		print(x)
+		comb_count +=1
+		
+	print("Total Combinations:{0}".format(comb_count))	
+	
+	
+	
+if __name__ == "__main__":main(sys.argv[0:])
