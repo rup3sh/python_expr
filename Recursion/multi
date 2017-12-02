@@ -1,0 +1,23 @@
+#!/bin/python3
+
+def mult(a,b):
+
+	print("A:",a, " B:", b)
+	
+	if b == 1:
+		return a
+	elif b == 0:
+		return 0	
+	else:
+		return a + mult(a, b-1)
+		
+def main():
+	
+	a = 5
+	b = 4
+	
+	result = mult(a,b)
+	
+	print(result)
+	
+if __name__=="__main__":main()

@@ -1,0 +1,33 @@
+#!/bin/python3
+
+def isPalindrome(word):
+	
+	def extractChars(word):
+	
+		chars = []
+		for w in word.lower():
+			if w in 'abcdefghijklmnopqrstwxyz':
+			 	chars.append(w)
+		return ''.join(chars)	
+	
+	def isPalin(s):
+	
+		if len(s)==1:
+			return True
+		else:
+			return s[0]==s[-1] and isPalin(s[1:-1])
+	
+	chars = extractChars(word)
+	print(chars)
+			
+	return isPalin(chars)			
+		
+def main():
+	
+	word = "Madam, I'm adam"
+	
+	result = isPalindrome(word)
+	
+	print(result)
+	
+if __name__=="__main__":main()
