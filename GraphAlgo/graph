@@ -1,0 +1,99 @@
+#!/bin/python3
+
+import collections
+
+class Vertex:
+
+	def __init__(self, key):
+		self.key = key
+		self.connectedTo = {}
+		
+	def addConnection(self, k, weight=0):
+		self.connectedTo[k] = weight
+		#print("Connection ", str(k) + " to ", str(self.key) )
+
+	def getConnections(self):
+		return self.connectedTo.keys()	
+			
+	def getWeight(self, nbr):
+		return self.connectedTo[nbr]
+	
+	def getId(self):
+		return self.key
+				
+	def __str__(self):
+	
+		msg = "Vertex " + str(self.key) + " is connected to " +\
+			 str([x.key for x in self.connectedTo])
+		return msg				
+	
+class Graph:
+
+	def __init__(self):
+	
+		self.vertices = dict()
+		self.numVertices = 0
+		
+	def addVertex(self, v):
+		
+		if v not in self.vertices:
+			vertex = Vertex(v)
+			self.vertices[v] = vertex
+			self.numVertices+=1
+			return vertex
+		else:
+			raise ValueError("Vertex already exists!")
+				
+	def getVertex(self, k):
+	
+		if k in self.vertices:
+			return self.vertices[k]
+		else:
+			return None
+			 
+		
+	def addEdge(self, v1, v2, weight=0):
+	
+		if v1 not in self.vertices:
+			self.addVertex(v1)
+		if v2 not in self.vertices:
+			self.addVertex(v2)
+		
+		vertex1 = self.getVertex(v1)
+		vertex2 = self.getVertex(v2)
+		
+		vertex1.addConnection(vertex2,weight)				
+	
+	def getVertices(self):
+	
+		return self.vertices.keys()
+	
+	def __contains__(self, n):
+		return n in self.vertices
+			
+	def __iter__(self):
+		return iter(self.vertices.values())
+		
+	def __str__(self):
+		msg = "vertices:" 
+		for v in self.vertices.keys():
+			msg+= str(v) + ","
+		return msg	
+							
+def main():
+	g = Graph()
+	
+	for i in range(6):
+		g.addVertex(i)
+		
+	g.addEdge(0,1,5)
+	g.addEdge(0,5,2)
+	g.addEdge(1,2,4)
+	g.addEdge(2,3,9)
+	
+	for v in g:
+		for w in v.getConnections():
+			print(v.getId(), " , " , w.getId())	
+	print(g)
+	
+if __name__=="__main__":main()

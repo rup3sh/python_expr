@@ -1,0 +1,66 @@
+#!/bin/python3
+
+import collections
+from GraphLib import Graph
+#18.4 Alternate implementation EPIP, cycle of undirected graph
+#https://diego.assencio.com/?index=e83a797bcee562e2f1a4faa9293316ab
+def buildGraph():
+
+	g = Graph.Graph()
+
+	myFile = open('undirected_cycle.txt', 'r')
+	
+	for line in myFile:
+		if line.startswith('#'):
+			continue
+			
+		else:
+			nodes = line.strip().split(':')
+			g.add_vertex(Graph.Vertex(nodes[0]))
+			g.add_vertex(Graph.Vertex(nodes[1]))
+			g.add_edge(nodes[0], nodes[1])
+			#print("N1:", nodes[0], "N2:", nodes[1])
+	
+	return g
+
+#Using BFS			
+def hasCycle(graph):
+
+	dist_map = {v:0 for v in graph} #0 means unexplored vertex(distance map)
+	
+	queue = collections.deque()	
+	
+	for v in graph:
+	
+		if dist_map[v] == 0:
+			queue.append(v)
+			print("Exporing outside queue:", v)
+		else:
+			continue #Is this for multiple connected components?
+		
+		while queue:
+			vname = queue.popleft()
+			print("Exploring...", vname)
+			vertex = graph.get_vertex(vname)
+			neighbors = vertex.get_neighbors()
+			
+			for neighbor in neighbors:
+				n = graph.get_vertex(neighbor)
+				if dist_map[neighbor] == 0:
+					queue.append(neighbor)
+					dist_map[neighbor] = dist_map[vname] +1
+				elif dist_map[neighbor]>=dist_map[vname]:
+					print("Cycle found at :", neighbor, " from vertex:", vname)
+					return True 
+								
+			print(dist_map)	
+	
+	
+									
+def main():
+
+	g = buildGraph()
+	#g.print_graph()
+	hasCycle(g)
+
+if __name__=="__main__":main()

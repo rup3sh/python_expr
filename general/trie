@@ -1,0 +1,117 @@
+#!/bin/python3
+import json
+
+class Trie:
+
+	def __init__(self):
+		self._root = {}	
+			
+	def insertWord(self, string):
+		''' Inserts word by iterating thru char by char and adding '*"
+		to mark end of word and store complete word there for easy search'''
+		
+		node = self._root
+		
+		for c in string:
+			if c not in node:
+				node[c] = {}
+			
+			node = node[c]
+			
+		node['*'] = string							
+	
+	def printTrie(self):
+	
+		node = self._root		
+		print(json.dumps(self._root, indent=2))	
+		
+	##Utility methods
+	
+	def isWord(self, word):
+		''' check if word exists in trie'''
+		
+		node = self._root
+		
+		for c in word:				
+			if c not in node:
+				return False
+			node = node[c]
+			
+		# All chars were seen	
+		return True
+	
+	#EPIP, Question 24.20
+	def shortestUniquePrefix(self, string):
+	
+		'''shortest unique prefix not in the trie'''
+		
+		prefix = []
+		node = self._root
+		
+		for c in string:
+		
+			prefix.append(c)
+			
+			if c not in node:
+				return ''.join(prefix)
+			node = node[c]
+		
+		return ''
+			 
+		
+	def startsWithPrefix(self, prefix):
+	
+		''' return suffixes that start with given prefix '''
+		
+		# Simulating DFS
+		def _dfs(node):
+			stack = []
+			stack.append(node)
+			
+			temp = []
+			while stack:
+				n = stack.pop()
+				for c in n.keys():
+					if c == '*': #Word end found
+						temp.append(n[c])
+					else: #Keep searching
+						stack.append(n[c])
+			return temp
+								
+		##Position node to the end of prefix list
+		node = self._root
+		for c in prefix:
+			if c not in node:
+				break
+			node = node[c]
+		
+		return _dfs(node)				
+			
+def main():
+
+	t_list = "mon mony mont monty monday mondays tea ted teddy tom tony tori tomas tomi todd"
+	words = t_list.split()
+	
+	trie = Trie()
+	
+	for word in words:
+		trie.insertWord(word)
+	
+	#trie.printTrie()	
+	
+	#Utility method test
+	
+	target = 'teal'	
+	#print(target, "Is in tree?", trie.isWord(target))
+	
+	target = 'teddy'	
+	#print(target, "Is in tree?", trie.isWord(target))
+	
+	target = 'temporary'	
+	#shortest_unique_not_in_trie = trie.shortestUniquePrefix(target) 
+	#print("shortest_unique_not_in_trie is :", shortest_unique_not_in_trie)
+	
+	suffixes = trie.startsWithPrefix('mon')
+	print("Words starting with prefix:", suffixes)
+	
+if __name__=="__main__":main()

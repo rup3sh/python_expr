@@ -1,0 +1,23 @@
+#https://algocoding.wordpress.com/2015/04/02/detecting-cycles-in-a-directed-graph-with-dfs-python/
+# Cycle 1
+#0:1
+#1:2
+#2:3
+#3:4
+#4:1
+# End Cycle 1
+#This has 2 cycles (B-C-D-E-G-C) and (B-C-D-E-F-E-G-C)
+A:B
+B:C
+C:D
+D:E
+D:F
+F:J
+F:I
+I:K
+E:G
+G:C
+B:G
+#Extra Graph component not connected
+X:Y
+Y:Z

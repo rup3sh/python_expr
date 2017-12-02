@@ -1,0 +1,99 @@
+#!/bin/python3
+
+import collections
+from GraphLib import Graph
+
+
+def buildGraph():
+
+	g = Graph.Graph()
+
+	myFile = open('words.txt', 'r')
+	
+	wordmap = collections.defaultdict(list)
+	
+	#Make buckets that are only one letter apart, add word(vertex) to graph
+	for line in myFile:
+		word = line.strip()
+		for i in range(0, len(word)):
+			bucket = word[:i] + '_' + word[i+1:]
+			#print(bucket)	
+			wordmap[bucket].append(word)
+			g.add_vertex(Graph.Vertex(word))
+
+	#print(wordmap['_ope'])
+	
+	#print(wordmap)
+	# Now add edges to word vertices i.e. all words are connected to each other in one bucket
+	
+	for bucket in wordmap:
+		#print(bucket)
+		for w1 in wordmap[bucket]:
+			for w2 in wordmap[bucket]:
+				if w1==w2:
+					continue #Don't connect word to itself
+				else:
+					g.add_edge(w1,w2)	 
+	return g
+	
+
+# Given a starting word of graph, find if eventually we can reach the new target word 
+# and what is the path. USe BFS
+# This is CORRECT IMPLEMENTATION OF BFS
+
+def findWord(g, rootword, target):
+
+	queue = collections.deque()
+	
+	queue.append(rootword)
+	path = []
+	
+	while queue:
+	
+		nodename = queue.popleft()
+		if nodename==target:
+			path.append(nodename)
+			break
+					
+		node = g.get_vertex(nodename)
+		node.distance = 0		
+		path.append(nodename)		
+		neighbors = node.get_neighbors()	
+		
+		for n in neighbors:
+			nv = g.get_vertex(n)
+			if nv.color == 'black':
+				nv.color = 'gray'
+				queue.append(n)
+				if nv.distance > node.distance+1:
+					nv.distance = node.distance + 1
+		node.color='white'
+		
+	return path				
+		
+'''
+a = Graph.Vertex('A')
+g.add_vertex(a)
+g.add_vertex(Graph.Vertex('B'))
+for i in range(ord('A'), ord('K')):
+	g.add_vertex(Graph.Vertex(chr(i)))
+
+edges = ['AB', 'AE', 'BF', 'CG', 'DE', 'DH', 'EH', 'FG', 'FI', 'FJ', 'GJ', 'HI']
+for edge in edges:
+	g.add_edge(edge[:1], edge[1:])
+	
+g.bfs(a)
+#isFound = g.bfsMod(a, 'I')
+#isFound = g.bfsMod(a, 'X')
+#print ("Node found:", isFound)
+
+g.print_graph()'''
+
+def main():
+
+	g = buildGraph()
+	#g.print_graph()
+	path = findWord(g, 'fool', 'sage')
+	print("WordLadder:", path, " length:", len(path))
+
+if __name__=="__main__":main()

@@ -1,0 +1,50 @@
+#!/bin/python3
+
+from itertools import permutations
+
+
+def permute(s):
+
+	print("S", s)
+	
+	if(len(s)==1): 
+		return [s]
+
+	result=[]
+	for i,c in enumerate(s):
+        	result += [c+p for p in permute(s[:i]+s[i+1:])]
+
+	return result
+
+#http://www.ardendertat.com/2011/10/28/programming-interview-questions-11-all-permutations-of-string/
+def permutations(word):
+    
+    print(word)
+    
+    if len(word)<2:
+        return [word]
+ 
+    #get all permutations of length N-1
+    perms=permutations(word[1:])
+    print("perms:", perms)
+    char=word[0]
+    result=[]
+    #iterate over all permutations of length N-1
+    for perm in perms:
+        #insert the character into every possible location
+        for i in range(len(perm)+1):
+            result.append(perm[:i] + char + perm[i:])
+    print("Result:", result)	    
+    return result
+    					
+def main():
+	
+	word = 'sky'
+	
+	#perms = {''.join(p) for p in permutations(word)}
+	
+	perms = permutations(word)
+	
+	print(perms)
+	
+if __name__=="__main__":main()

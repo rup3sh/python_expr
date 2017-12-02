@@ -1,0 +1,79 @@
+#!/bin/python3
+
+import collections
+from GraphLib import Graph
+#18.4 Alternate implementation EPIP
+
+def buildGraph():
+
+	g = Graph.DirectedGraph()
+
+	myFile = open('graph_1.txt', 'r')
+	
+	for line in myFile:
+		if line.startswith('#'):
+			continue
+			
+		else:
+			nodes = line.strip().split(':')
+			g.add_vertex(Graph.Vertex(nodes[0]))
+			g.add_vertex(Graph.Vertex(nodes[1]))
+			g.add_edge(nodes[0], nodes[1])
+			#print("N1:", nodes[0], "N2:", nodes[1])
+	
+	return g
+			
+
+def hasCycle(graph):
+
+	''' doctstring
+	'''
+	
+	def dfs(vname):	
+	
+		print("Exploring:", vname)		
+		if vertex_color[vname] == 'gray':
+			print("Found cycle at ", vname)
+			return True
+		else:		
+			vertex_color[vname] = 'gray'
+			v = graph.get_vertex(vname)
+			#print(vertex_color)
+			neighbors = v.get_neighbors()
+		
+			for n in neighbors:
+				nname = graph.get_vertex(n)
+				if vertex_color[nname.name] == 'gray':
+					print("Found cycle here ", nname.name)
+					return True
+				if vertex_color[nname.name] == 'white':
+					return dfs(nname.name)
+			vertex_color[vname] = 'black'
+		
+		return False				
+	
+	
+	is_cycle = False
+	print("Checking cycles...")	
+	vertex_color = { v:'white' for v in graph } #Init all vertex to white
+	
+	for v in graph:
+		if vertex_color[v] == 'white':
+			print("Looking fresh at vertex:", v)
+			is_cycle = dfs(v)
+			if is_cycle:
+				print("Cycle found..")
+				break
+	
+	print("Final:", vertex_color)
+	return is_cycle
+									
+def main():
+
+	g = buildGraph()
+	#g.print_graph()
+	iscycle = hasCycle(g)
+	
+	print("Cycle:", iscycle)
+
+if __name__=="__main__":main()

@@ -1,0 +1,31 @@
+#!/bin/python3
+
+import sys
+import math
+# Convert to base 10
+def main(argv):
+
+	number = 33
+	baseB = 2
+	
+	r = fromBase10toBaseB(number, baseB)
+
+	print("Result: " + str(r))
+
+def fromBase10toBaseB(n, baseB):
+
+	remainders = []
+
+	while n>=baseB:
+		r = n%baseB
+		n = n//baseB
+		remainders.append(r)
+		print(n)
+
+	r = n%baseB
+	remainders.append(r)
+	
+	strn = list(reversed(remainders))
+	return strn
+	
+if __name__ == "__main__":main(sys.argv[0:])

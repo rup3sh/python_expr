@@ -1,0 +1,31 @@
+#!/bin/python3
+
+import sys
+import math
+# Convert to base 10
+def main(argv):
+
+	number = 1100
+	fromBase = 2
+	num_l = list(str(number))
+	nums = list(map(int, num_l))
+	
+	r = toBase10(nums, fromBase)
+
+	print("Result: " + str(r))
+
+def toBase10(numbers, fromBase):
+
+	accumalate = 0
+	
+	rev_num = list(reversed(numbers))
+	#print(rev_num)
+
+	for i in range(0,len(rev_num)):
+		
+		power = pow(fromBase, i) 
+		#print("POWER {}".format(power))
+		accumalate += power * rev_num[i]
+	return accumalate 
+	
+if __name__ == "__main__":main(sys.argv[0:])

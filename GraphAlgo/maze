@@ -1,0 +1,112 @@
+#!/bin/python3
+
+import collections
+from GraphLib import Graph
+
+
+def buildGraph():
+
+	g = Graph.Graph()
+
+	myFile = open('maze.txt', 'r')
+	
+	for line in myFile:
+		if line.startswith('#'):
+			continue
+			
+		else:
+			nodes = line.strip().split(':')
+			g.add_vertex(Graph.Vertex(nodes[0]))
+			g.add_vertex(Graph.Vertex(nodes[1]))
+			g.add_edge(nodes[0], nodes[1])
+			#print("N1:", nodes[0], "N2:", nodes[1])
+	
+	return g
+			
+# Given a starting square find end square of maze
+# Using DFS
+
+def findPath(g, rootsquare, endsquare):
+
+	path = []
+	
+	stack = [rootsquare]
+	time = 1
+	is_path = False
+	
+	while stack:
+	
+		nodename = stack.pop()
+		
+		node = g.get_vertex(nodename)
+		node.color = 'red'
+		node.discovery = time
+		time +=1
+		
+		path.append(nodename)
+		
+		if nodename == endsquare:
+			is_path = True
+			break
+			
+		neighbors = node.get_neighbors()
+		
+		for n in neighbors:
+			v = g.get_vertex(n)
+			if v.color =='black':
+				stack.append(n)
+				
+		node.color='blue'	
+		node.finish=time
+		time+=1
+	
+	if is_path:	
+		return path
+	
+	return []
+
+
+def findPathUsingBFS(g, rootsquare, endsquare):
+
+	queue = collections.deque()
+	
+	queue.append(rootsquare)
+	is_path = False
+	path = []
+	
+	while queue:
+	
+		nodename = queue.popleft()
+		node = g.get_vertex(nodename)
+		node.color = 'red'
+		
+		if nodename== endsquare:
+			is_path = True
+			path.append(nodename)
+			break
+			
+		neighbors = node.get_neighbors()
+		
+		for n in neighbors:
+			nv = g.get_vertex(n)
+			if nv.color =='black':
+				queue.append(n)
+				nv.color = 'gray'
+		
+		node.color = 'white'		
+		path.append(nodename)
+		
+	if is_path:
+		return path
+	return []		
+		
+								
+def main():
+
+	g = buildGraph()
+	#g.print_graph()
+	#path = findPath(g, '0,0', '1,3')
+	path = findPathUsingBFS(g, '0,0', '1,3')
+	print("Path:", path)
+
+if __name__=="__main__":main()
